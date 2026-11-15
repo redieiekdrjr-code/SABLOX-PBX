@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b2c"><title>SABLOX PBX — Учебная АТС</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121f33;--line:#263953;--muted:#9db0c8;--accent:#38bdf8;--green:#34d399;--red:#fb7185}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,#1b3551 0,transparent 35%),var(--bg);color:#eef6ff;font:16px system-ui, sans-serif}
+header{padding:22px max(18px,calc((100% - 1050px)/2));border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-weight:900;letter-spacing:2px;font-size:22px}.logo span{color:var(--accent)}.status{font-size:12px;color:var(--green);border:1px solid #24664f;border-radius:30px;padding:7px 11px}
+main{max-width:1050px;margin:26px auto;padding:0 16px}.intro h1{font-size:clamp(25px,5vw,38px);margin:0 0 7px}.intro p{color:var(--muted);margin:0 0 22px}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.panel{background:linear-gradient(145deg,#15243a,#101b2c);border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:0 12px 32px #0003}.panel h2{font-size:17px;margin:0 0 14px}
+.extensions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ext{border:1px solid var(--line);border-radius:13px;padding:13px;background:#0c1728}.ext strong{font-size:22px;display:block}.ext small{color:var(--muted)}.ext .dot{float:right;width:9px;height:9px;background:var(--green);border-radius:50%;margin-top:7px}
+label{display:block;color:var(--muted);font-size:13px;margin:12px 0 6px}select,button{font:inherit;border-radius:11px;padding:12px;border:1px solid var(--line)}select{background:#0b1728;color:white;width:100%}button{cursor:pointer;background:#12344b;color:#eaf8ff;border-color:#24516d;font-weight:700}button:active{transform:scale(.98)}button.primary{background:linear-gradient(90deg,#0284c7,#2563eb);border:0;width:100%;margin-top:13px}button.end{background:#451c2a;border-color:#713044;width:100%;margin-top:9px}
+.display{background:#07111f;border:1px solid #20344e;border-radius:13px;padding:17px;min-height:125px}.display .big{font-size:27px;font-weight:800}.muted{color:var(--muted)}#log{height:180px;overflow:auto;font-size:13px;color:#b9c9dc;line-height:1.7}footer{text-align:center;color:#71859f;font-size:12px;padding:26px}
+.notice{margin-top:15px;background:#102b3b;border:1px solid #20516a;border-radius:12px;padding:12px;color:#c5eaff;font-size:13px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}header{padding:16px}.extensions{grid-template-columns:repeat(2,1fr)}}
+</style></head>
+<body><header><div class="logo">SABLOX <span>PBX</span></div><div class="status">● УЧЕБНЫЙ РЕЖИМ</div></header>
+<main><section class="intro"><h1>Телефонная станция</h1><p>Учебная панель внутренней связи музея SABLOX.</p></section>
+<div class="grid"><section class="panel"><h2>Внутренние номера</h2><div class="extensions">
+<div class="ext"><i class="dot"></i><strong>101</strong><small>Директор</small></div><div class="ext"><i class="dot"></i><strong>102</strong><small>Приёмная</small></div><div class="ext"><i class="dot"></i><strong>103</strong><small>Касса</small></div><div class="ext"><i class="dot"></i><strong>104</strong><small>Охрана</small></div><div class="ext"><i class="dot"></i><strong>105</strong><small>Музей</small></div><div class="ext"><i class="dot"></i><strong>106</strong><small>Архив</small></div>
+</div><div class="notice">Все аппараты доступны в демонстрации. Звонки здесь имитируются — реальный звук между устройствами пока не подключён.</div></section>
+<section class="panel"><h2>Коммутатор</h2><div class="display"><div class="muted" id="state">Линия свободна</div><div class="big" id="number">—</div><div class="muted" id="detail">Выберите внутренний номер</div></div>
+<label for="from">Позвонить с аппарата</label><select id="from"><option value="101">101 — Директор</option><option value="102">102 — Приёмная</option><option value="103">103 — Касса</option><option value="104">104 — Охрана</option><option value="105">105 — Музей</option><option value="106">106 — Архив</option></select>
+<label for="to">Набрать номер</label><select id="to"><option value="102">102 — Приёмная</option><option value="101">101 — Директор</option><option value="103">103 — Касса</option><option value="104">104 — Охрана</option><option value="105">105 — Музей</option><option value="106">106 — Архив</option></select>
+<button class="primary" id="call">☎ Начать вызов</button><button class="end" id="hang" disabled>Завершить вызов</button></section>
+<section class="panel" style="grid-column:1/-1"><h2>Журнал станции</h2><div id="log">Станция запущена. Ожидание вызовов…</div></section></div></main><footer>SABLOX PBX · Учебная АТС · Версия 0.1</footer>
+<script>
+const names={101:"Директор",102:"Приёмная",103:"Касса",104:"Охрана",105:"Музей",106:"Архив"};let active=false,timer;
+const $=id=>document.getElementById(id),log=(s)=>{$("log").innerHTML=new Date().toLocaleTimeString("ru-RU")+" — "+s+"<br>"+$("log").innerHTML};
+$("call").onclick=()=>{const a=$("from").value,b=$("to").value;if(a===b){$("detail").textContent="Нельзя позвонить самому себе";return}if(active)return;active=true;$("state").textContent="Вызов…";$("number").textContent=a+" → "+b;$("detail").textContent=names[b]+" · имитация соединения";$("call").disabled=true;$("hang").disabled=false;log("Вызов "+a+" ("+names[a]+") → "+b+" ("+names[b]+")");timer=setTimeout(()=>{if(active){$("state").textContent="Соединение установлено (демо)";log("Демо-соединение установлено: "+a+" ↔ "+b)}},1300)};
+$("hang").onclick=()=>{if(!active)return;clearTimeout(timer);log("Вызов завершён");active=false;$("state").textContent="Линия свободна";$("number").textContent="—";$("detail").textContent="Выберите внутренний номер";$("call").disabled=false;$("hang").disabled=true};
+</script></body></html>
